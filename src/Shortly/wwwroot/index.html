@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Shortly</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 1.2em;
+        }
+
+        body {
+            margin: 0;
+        }
+
+        .header {
+            background-color: #ddd;
+            padding: 10px;
+        }
+
+        .form {
+            background-color: #f1f1f1;
+            padding: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h1>Shortly</h1>
+    </div>
+    <div class="form">
+        <input id="url" type="url"></input>
+        <button id="submit">Shorten</button>
+        <p id="invalidUrl">Your url is invalid</p>
+        <p id="resultText">Your url has been shortened!</p>
+        <input id="result"></input>
+        <button id="reset">Reset</button>
+    </div>
+
+    <script>
+        var urlInput = document.getElementById("url");
+        var invalidUrl = document.getElementById("invalidUrl");
+        var submitButton = document.getElementById("submit");
+        var resultText = document.getElementById("resultText");
+        var resultInput = document.getElementById("result");
+        var resetButton = document.getElementById("reset");
+
+        submitButton.addEventListener("click", e => {
+            shortenUrl();
+        });
+
+        resetButton.addEventListener("click", e => {
+            setState("reset");
+        });
+
+        setState("reset");
+
+        async function shortenUrl() {
+            if (!isUrlValid(urlInput.value)) {
+                setState("invalidUrl");
+                return;
+            }
+
+            const headers = { 'content-type': 'application/json' };
+
+            await fetch('/shorten', { method: 'post', body: JSON.stringify(urlInput.value), headers: headers })
+                .then(response => response.json())
+                .then(message => setState("success", message))
+                .catch(error => alert('error' + error));
+        }
+
+        function isUrlValid(url) {
+            try {
+                new URL(url);
+            } catch {
+                return false;
+            }
+            return true;
+        }
+
+        // state can be set to 'reset', 'invalid url' or 'success' with value
+        function setState(state, hash) {
+            if (state == "reset") {
+                urlInput.value = "";
+                resultInput.value = "";
+            }
+            else {
+                resultInput.value = location.origin + '/' + hash;
+            }
+
+            urlInput.style.display = display(state != "success");
+            invalidUrl.style.display = display(state == "invalidUrl");
+            submitButton.style.display = display(state != "success");
+            resultText.style.display = display(state == "success");
+            resultInput.style.display = display(state == "success");
+            resetButton.style.display = display(state != "reset");
+        }
+
+        function display(visible) {
+            return visible ? '' : 'none';
+        }
+    </script>
+</body>
+
+</html>
